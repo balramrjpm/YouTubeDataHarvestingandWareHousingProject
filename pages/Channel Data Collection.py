@@ -6,7 +6,7 @@ import plotly.express as px
 import mysql.connector
 
 # Api connection details
-Api_Key = "AIzaSyByIzpRaLxymR44tohB9XsiYkCd_66Foa0"
+Api_Key = ""
 Api_Name = "youtube"
 Api_Version = "v3"
 
