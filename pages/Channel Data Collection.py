@@ -6,7 +6,8 @@ import plotly.express as px
 import mysql.connector
 
 # Api connection details
-Api_Key = "AIzaSyByIzpRaLxymR44tohB9XsiYkCd_66Foa0"
+# Api_Key = "AIzaSyByIzpRaLxymR44tohB9XsiYkCd_66Foa0"
+Api_Key = "AIzaSyA8sFEUjjDAsWzxlJfOCko47e-TWkQMPXU"
 Api_Name = "youtube"
 Api_Version = "v3"
 
@@ -191,12 +192,13 @@ def create_tables(conn):
     channel_table_query = """
     CREATE TABLE IF NOT EXISTS channel_data (
         Channel_Name VARCHAR(255),
-        Channel_Id VARCHAR(255),
+        Channel_Id VARCHAR(255) NOT NULL,
         Subscribers INT,
         Views INT,
         Total_videos INT,
         Channel_description TEXT,
-        Playlist_Id VARCHAR(255)
+        Playlist_Id VARCHAR(255),
+        PRIMARY KEY(Channel_Id)
     )
     """
     video_table_query = """
@@ -215,7 +217,8 @@ def create_tables(conn):
         Comments INT,
         Favorite_count INT,
         Definition VARCHAR(255),
-        Caption_Status VARCHAR(255)
+        Caption_Status VARCHAR(255),
+        PRIMARY KEY(Video_Id)
     )
     """
     comment_table_query = """
@@ -224,7 +227,8 @@ def create_tables(conn):
         Video_id VARCHAR(255),
         Comment_text TEXT,
         Comment_Author VARCHAR(255),
-        Comment_Published DATETIME
+        Comment_Published DATETIME,
+        PRIMARY KEY (Comment_id)
     )
     """
     playlist_table_query = """
@@ -282,9 +286,9 @@ def insert_channel_info_to_mysql(conn, channel_info):
             cursor.execute(insert_query, (info["Channel_Name"], info["Channel_Id"], info["Subscribers"], info["Views"], info["Total_videos"], info["Channel_description"], info["Playlist_Id"]))
         
         conn.commit()
-        print("Channel info inserted into MySQL successfully!")
+        return "Success"
     except mysql.connector.Error as e:
-        print("Error inserting channel info into MySQL:", e)
+        return "Duplicate"
         conn.rollback()
     finally:
         cursor.close()
@@ -368,13 +372,15 @@ def insert_playlist_data_to_mysql(conn, playlist_data):
             INSERT INTO playlist_data (Playlist_Id, Title, Channel_Id, Channel_Name, PublishedAt, Video_count) 
             VALUES (%s, %s, %s, %s, %s, %s)
             """
+            print(data['PublishedAt'].replace("T", " ").replace("Z", " "))
             # Execute the query with data from the playlist_data list
             cursor.execute(insert_query, (
                 data['Playlist_Id'],
                 data['Title'],
                 data['Channel_Id'],
                 data['Channel_Name'],
-                data['PublishedAt'],
+                data['PublishedAt'].replace("T", " ").replace("Z", " "),
+                # format(data['PublishedAt'],"yyyy-mm-dd-hh-mm"),
                 data['Video_count']
             ))
         
@@ -405,17 +411,17 @@ if len(channel_id)>0:
         video2 = get_Video_Details(youtube,Video_data)
         channel_data = get_channel_info(youtube, channel_id)
         
-        get_channel_info
+        # get_channel_info
 
-        '''
-        "Channel_Name": i["snippet"]["title"],
-        "Channel_Id": i["id"],
-        "Subscribers": i["statistics"]["subscriberCount"],
-        "Views": i["statistics"]["viewCount"],
-        "Total_videos": i["statistics"]["videoCount"],
-        "Channel_description": i["snippet"]["description"],
-        "Playlist_Id": i["contentDetails"]["relatedPlaylists"]["uploads"]
-        '''
+        # '''
+        # "Channel_Name": i["snippet"]["title"],
+        # "Channel_Id": i["id"],
+        # "Subscribers": i["statistics"]["subscriberCount"],
+        # "Views": i["statistics"]["viewCount"],
+        # "Total_videos": i["statistics"]["videoCount"],
+        # "Channel_description": i["snippet"]["description"],
+        # "Playlist_Id": i["contentDetails"]["relatedPlaylists"]["uploads"]
+        # '''
         # Establishing connection to MySQL database
         conn = connect_to_mysql()
 
@@ -424,27 +430,31 @@ if len(channel_id)>0:
             create_tables(conn)
 
             # Inserting data into MySQL tables
-            insert_channel_info_to_mysql(conn, channel_data)
-            insert_video_data_to_mysql(conn, video2)
-            insert_comment_data_to_mysql(conn, comment_data)
-            insert_playlist_data_to_mysql(conn, playlist_data)
+            result = insert_channel_info_to_mysql(conn, channel_data)
+            if result == "Success":
+                insert_video_data_to_mysql(conn, video2)
+                insert_comment_data_to_mysql(conn, comment_data)
+                insert_playlist_data_to_mysql(conn, playlist_data)
+                st.write("Data migrated to MySQL successfully!")
+            else:
+                st.write("Duplicate Data")
 
             # Closing the MySQL connection
             conn.close()
 
             # Displaying success message
-            st.write("Data migrated to MySQL successfully!")
+            
 
-def execute_query(query):
-    mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Admin@123",
-        database="youtubedata",
-        port="3306"
-    )
+# def execute_query(query):
+#     mydb = mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password="Admin@123",
+#         database="youtubedata",
+#         port="3306"
+#     )
 
-def duplicate_Channel(channel_id):
-    conn = execute_query("SELECT * FROM channel_data WHERE Channel_Id = %s", channel_id)
+# def duplicate_Channel(channel_id):
+#     conn = execute_query("SELECT * FROM channel_data WHERE Channel_Id = %s", channel_id)
 
 
