@@ -152,6 +152,15 @@ def get_playlist_details(youtube, channel_id):
                 'PublishedAt': item['snippet']['publishedAt'],
                 'Video_count': item['contentDetails']['itemCount']
             }
+            # data = {
+            #     'Playlist_Id': item['id'],
+            #     'Title': item['snippet']['title'],
+            #     'Channel_Id': item['snippet']['channelId'],
+            #     'Channel_Name': item['snippet']['channelTitle'],
+            #     'PublishedAt': datetime.datetime.strptime(item['snippet']['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+            #     'Video_count': item['contentDetails']['itemCount']
+            # }
+            
             All_data.append(data)
 
         next_page_token = response.get('nextPageToken')
@@ -372,7 +381,7 @@ def insert_playlist_data_to_mysql(conn, playlist_data):
             INSERT INTO playlist_data (Playlist_Id, Title, Channel_Id, Channel_Name, PublishedAt, Video_count) 
             VALUES (%s, %s, %s, %s, %s, %s)
             """
-            print(data['PublishedAt'].replace("T", " ").replace("Z", " "))
+            # print(data['PublishedAt'].replace("T", " ").replace("Z", " "))
             # Execute the query with data from the playlist_data list
             cursor.execute(insert_query, (
                 data['Playlist_Id'],
